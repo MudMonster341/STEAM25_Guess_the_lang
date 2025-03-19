@@ -1,10 +1,321 @@
 {% extends "game/base.html" %}
 {% load static %}
-{% block title %}Home - Code Guessing Game{% endblock %}
+{% block title %}Code Guessing Game - Home{% endblock %}
+
+{% block extra_head %}
+<!-- Load a "techy" Google Font (Orbitron). You can change this to any you like. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+
+<style>
+  /* More aggressive reset to eliminate all spacing */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Fix for any parent containers */
+  body > * {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Hero section to truly fill the viewport */
+  .hero {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  /* Make sure matrix canvas covers everything */
+  #matrix-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Subtle overlay to make text more readable */
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0,0.3); /* Subtle dark overlay */
+    z-index: 1;
+  }
+
+  /* Container for hero content (text, button) */
+  .hero-content {
+    position: relative;
+    z-index: 2; /* Above the overlay and canvas */
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    animation: fadeIn 1.5s ease-in-out; /* Fade-in animation */
+    padding: 0 20px; /* Some horizontal padding for mobile */
+  }
+
+  /* Fade-in keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Main heading style */
+  .hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px rgba(66, 135, 245, 0.7);
+  }
+
+  /* Subtitle/paragraph style */
+  .hero-content p {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    max-width: 700px; /* Limit text width for readability */
+    margin-left: auto;
+    margin-right: auto;
+    text-shadow: 0 0 8px rgba(66, 135, 245, 0.5);
+  }
+
+  /* ------------------------- */
+  /*  BUBBLE-EFFECT BUTTON    */
+  /* ------------------------- */
+
+  /* Apply this class to your link (a.button) */
+  .hero-content a.button {
+    position: relative;
+    padding: 10px 22px;
+    border-radius: 6px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    background-color: #4287f5;
+    transition: all 0.2s ease;
+    font-size: 1.2rem;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .hero-content a.button:active {
+    transform: scale(0.96);
+  }
+
+  .hero-content a.button::before,
+  .hero-content a.button::after {
+    position: absolute;
+    content: "";
+    width: 150%;
+    left: 50%;
+    height: 100%;
+    transform: translateX(-50%);
+    z-index: -1000;
+    background-repeat: no-repeat;
+  }
+
+  /* Bubble effect on hover */
+  .hero-content a.button:hover::before {
+    top: -70%;
+    background-image: radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, transparent 20%, #4287f5 20%, transparent 30%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, transparent 10%, #4287f5 15%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%);
+    background-size: 10% 10%, 20% 20%, 15% 15%, 20% 20%, 18% 18%, 10% 10%, 15% 15%,
+      10% 10%, 18% 18%;
+    background-position: 50% 120%;
+    animation: greentopBubbles 0.6s ease;
+  }
+
+  @keyframes greentopBubbles {
+    0% {
+      background-position: 5% 90%, 10% 90%, 10% 90%, 15% 90%, 25% 90%, 25% 90%,
+        40% 90%, 55% 90%, 70% 90%;
+    }
+
+    50% {
+      background-position: 0% 80%, 0% 20%, 10% 40%, 20% 0%, 30% 30%, 22% 50%,
+        50% 50%, 65% 20%, 90% 30%;
+    }
+
+    100% {
+      background-position: 0% 70%, 0% 10%, 10% 30%, 20% -10%, 30% 20%, 22% 40%,
+        50% 40%, 65% 10%, 90% 20%;
+      background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+    }
+  }
+
+  .hero-content a.button:hover::after {
+    bottom: -70%;
+    background-image: radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, transparent 10%, #4287f5 15%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%),
+      radial-gradient(circle, #4287f5 20%, transparent 20%);
+    background-size: 15% 15%, 20% 20%, 18% 18%, 20% 20%, 15% 15%, 20% 20%, 18% 18%;
+    background-position: 50% 0%;
+    animation: greenbottomBubbles 0.6s ease;
+  }
+
+  @keyframes greenbottomBubbles {
+    0% {
+      background-position: 10% -10%, 30% 10%, 55% -10%, 70% -10%, 85% -10%,
+        70% -10%, 70% 0%;
+    }
+
+    50% {
+      background-position: 0% 80%, 20% 80%, 45% 60%, 60% 100%, 75% 70%, 95% 60%,
+        105% 0%;
+    }
+
+    100% {
+      background-position: 0% 90%, 20% 90%, 45% 70%, 60% 110%, 75% 80%, 95% 70%,
+        110% 10%;
+      background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+    }
+  }
+
+  /* Responsive adjustments for smaller screens */
+  @media (max-width: 600px) {
+    .hero-content h1 {
+      font-size: 2rem;
+    }
+    .hero-content p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero-content a.button {
+      font-size: 1rem;
+      padding: 10px 20px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-    <h1>Welcome to the Code Guessing Game</h1>
-    <p>Press the button below to start.</p>
-    <div style="text-align: center;">
-        <a href="{% url 'game' %}" class="option-button">Start</a>
-    </div>
+<div class="hero">
+  <canvas id="matrix-canvas"></canvas>
+  <div class="hero-content">
+    <h1>Guess the Language</h1>
+    <p>Think you can guess each programming language just by looking at the code snippet?</p>
+    <!-- Use the new .button class for the bubble effect -->
+    <a href="{% url 'game' %}" class="button">Start</a>
+  </div>
+</div>
+
+<script>
+  // Matrix rain effect
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Column settings
+    let fontSize = 14;
+    let columns;
+    let drops = [];
+    
+    // Characters to display (you can customize this)
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>{}[]()=+-*/\\|;:,.?!@#$%^&';
+    
+    // Set canvas dimensions to match window size and recalculate columns and drops
+    function resizeCanvas() {
+      // Set canvas dimensions to window dimensions
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // Recalculate number of columns based on new width
+      columns = Math.floor(canvas.width / fontSize);
+      
+      // Reset drops if canvas width has changed
+      if (drops.length !== columns) {
+        drops = [];
+        // Initialize drops for each column
+        for (let i = 0; i < columns; i++) {
+          drops[i] = Math.floor(Math.random() * canvas.height / fontSize) * -1;
+        }
+      }
+    }
+    
+    // Call resize initially
+    resizeCanvas();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', function() {
+      resizeCanvas();
+    });
+    
+    // Draw the characters
+    function draw() {
+      // Set semi-transparent black background for trail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Set text color and font
+      ctx.fillStyle = '#4287f5';
+      ctx.font = fontSize + 'px monospace';
+      
+      // Draw characters for each column
+      for (let i = 0; i < drops.length; i++) {
+        // Get random character
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        
+        // Draw the character
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        
+        // Move drop down
+        drops[i]++;
+        
+        // Randomly reset some drops to top
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+      }
+    }
+    
+    // Animation loop
+    function animate() {
+      draw();
+      requestAnimationFrame(animate);
+    }
+    
+    // Start animation
+    animate();
+  });
+</script>
 {% endblock %}
