@@ -1,77 +1,313 @@
 {% extends "game/base.html" %}
 {% load static %}
 {% block title %}Game - Code Guessing Game{% endblock %}
+
 {% block extra_head %}
+<!-- Load a "techy" Google Font (optional) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+
+<style>
+  /* Reset & basic styling */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Allow vertical scrolling so nothing is cut off */
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;      /* Hide horizontal scroll */
+    overflow-y: auto;        /* Allow vertical scroll */
+    background-color: #000;  /* Fallback background */
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+  }
+
+  /* Full-screen container for the matrix effect */
+  .hero {
+    position: relative;
+    min-height: 100vh;       /* Allow content to expand vertically */
+    width: 100%;
+    display: flex;
+    flex-direction: column;  /* Stack content vertically */
+    align-items: center;     /* Center horizontally */
+    padding-top: 40px;       /* Space at the top so heading isn't cut off */
+  }
+
+  /* Matrix canvas in the background */
+  #matrix-canvas {
+    position: fixed;  /* Fixed so it stays in the background even when scrolling */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  /* Dark overlay for readability */
+  .hero::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 1;
+  }
+
+  /* Container for all game elements (on top of the overlay & canvas) */
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeIn 1.5s ease-in-out;
+    text-align: center; /* Center text */
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Title, timer, and score styling */
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  #timer, .score-text {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+
+  /* Snippet container */
+  .snippet-container {
+    background-color: #111;
+    border: 1px solid #444;
+    border-radius: 6px;
+    width: 100%;
+    height: 300px;  /* Adjust as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    margin: 0 auto 20px auto;
+  }
+  .snippet-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  /* Options form */
+  #answerForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px; /* Space at the bottom */
+  }
+
+  /* Hide native radio appearance */
+  input[type="radio"] {
+    display: none;
+  }
+
+  /* Option buttons */
+    .option-button {
+    display: flex;               /* Use Flexbox for centering */
+    justify-content: center;     /* Center horizontally */
+    align-items: center;         /* Center vertically */
+    background-color: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    width: 200px;                 /* Make button stretch to the container's width */
+    }
+  .option-button:hover {
+    background-color: #333;
+    transform: scale(1.03);
+  }
+  /* Highlight when selected */
+  input[type="radio"]:checked + .option-button {
+    background-color: #4287f5;
+    border-color: #4287f5;
+    box-shadow: 0 0 8px rgba(66, 135, 245, 0.5);
+  }
+
+  /* ANIMATION for correct/incorrect states */
+  @keyframes pop {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Correct & incorrect states override everything */
+  .correct {
+    background-color: #22c55e !important; /* green */
+    border-color: #22c55e !important;
+    animation: pop 0.3s forwards;
+  }
+  .incorrect {
+    background-color: #ef4444 !important; /* red */
+    border-color: #ef4444 !important;
+    animation: pop 0.3s forwards;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .hero-content {
+      padding: 10px;
+    }
+    h2 {
+      font-size: 1.5rem;
+    }
+    #timer, .score-text {
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+    .snippet-container {
+      height: 200px;
+    }
+    .option-button {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
 <script>
-    // JavaScript countdown timer (10 seconds)
-    let timeLeft = 10;
-    function updateTimer() {
-        document.getElementById("timer").innerHTML = "Time left: " + timeLeft;
-        if (timeLeft <= 0) {
-            submitAndProceed();
-        }
-        timeLeft -= 1;
+  // JavaScript countdown timer (10 seconds)
+  let timeLeft = 10;
+  function updateTimer() {
+    document.getElementById("timer").textContent = "Time left: " + timeLeft;
+    if (timeLeft <= 0) {
+      submitAndProceed();
     }
-    // Start the timer (update every second)
-    setInterval(updateTimer, 1000);
+    timeLeft -= 1;
+  }
+  setInterval(updateTimer, 1000);
 
-    function submitAnswer() {
-        // Get the selected option from the radio inputs
-        const selectedOption = document.querySelector('input[name="choice"]:checked');
-        if (!selectedOption) {
-            alert("Please select an option.");
-            return;
-        }
-
-        // Use the internal correct answer passed from Django for highlighting
-        const correctLanguage = "{{ correct_language|escapejs }}";
-        const options = document.querySelectorAll('input[name="choice"]');
-        options.forEach(option => {
-            const label = document.querySelector(`label[for="${option.id}"]`);
-            if (option.value === correctLanguage) {
-                label.classList.add('correct');
-            } else {
-                label.classList.add('incorrect');
-            }
-        });
-
-        // Create a hidden input to store the selected value (ensures submission even if radio is disabled)
-        let hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'choice';
-        hiddenInput.value = selectedOption.value;
-        document.getElementById('answerForm').appendChild(hiddenInput);
-
-        // Disable further selection to prevent changes
-        options.forEach(option => option.disabled = true);
-
-        // Wait for 2 seconds to show the feedback, then submit the form
-        setTimeout(submitAndProceed, 2000);
+  function submitAnswer() {
+    const selectedOption = document.querySelector('input[name="choice"]:checked');
+    if (!selectedOption) {
+      alert("Please select an option.");
+      return;
     }
+    const correctLanguage = "{{ correct_language|escapejs }}";
+    const options = document.querySelectorAll('input[name="choice"]');
+    options.forEach(option => {
+      const label = document.querySelector(`label[for="${option.id}"]`);
+      if (option.value === correctLanguage) {
+        label.classList.add('correct');
+      } else {
+        label.classList.add('incorrect');
+      }
+      option.disabled = true;
+    });
 
-    function submitAndProceed() {
-        document.getElementById("answerForm").submit();
-    }
+    // Hidden input for the selected value
+    let hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'choice';
+    hiddenInput.value = selectedOption.value;
+    document.getElementById('answerForm').appendChild(hiddenInput);
+
+    setTimeout(submitAndProceed, 2000);
+  }
+
+  function submitAndProceed() {
+    document.getElementById("answerForm").submit();
+  }
 </script>
 {% endblock %}
+
 {% block content %}
+<div class="hero">
+  <!-- Matrix background -->
+  <canvas id="matrix-canvas"></canvas>
+  
+  <div class="hero-content">
     <h2>Guess the Programming Language</h2>
     <p id="timer">Time left: 10</p>
-    <p>Score: {{ score }}</p>
+    <p class="score-text">Score: {{ score }}</p>
 
-    <!-- Display the snippet image -->
-    <div style="text-align: center;">
-        <img src="{% static 'images/snippets/' %}{{ image_filename }}" alt="Code snippet">
+    <div class="snippet-container">
+      <img src="{% static 'images/snippets/' %}{{ image_filename }}" alt="Code snippet">
     </div>
 
-    <!-- Answer submission form with auto-submit on click (no submit button) -->
     <form id="answerForm" method="POST" action="{% url 'game' %}">
-        {% csrf_token %}
-        {% for option in options %}
-            <div style="text-align: center; margin: 10px 0;">
-                <input type="radio" name="choice" value="{{ option.value }}" id="{{ option.value }}" onclick="submitAnswer()">
-                <label for="{{ option.value }}" class="option-button">{{ option.display }}</label>
-            </div>
-        {% endfor %}
+      {% csrf_token %}
+      {% for option in options %}
+        <div>
+          <input type="radio" name="choice" value="{{ option.value }}" id="{{ option.value }}" onclick="submitAnswer()">
+          <label for="{{ option.value }}" class="option-button">{{ option.display }}</label>
+        </div>
+      {% endfor %}
     </form>
+  </div>
+</div>
+
+<!-- Matrix animation logic (same as home/final_score) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let fontSize = 14;
+    let columns;
+    let drops = [];
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>{}[]()=+-*/\\|;:,.?!@#$%^&';
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = [];
+      for (let i = 0; i < columns; i++) {
+        drops[i] = Math.floor(Math.random() * canvas.height / fontSize) * -1;
+      }
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#4287f5';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        drops[i]++;
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+      }
+    }
+
+    function animate() {
+      draw();
+      requestAnimationFrame(animate);
+    }
+    animate();
+  });
+</script>
 {% endblock %}
