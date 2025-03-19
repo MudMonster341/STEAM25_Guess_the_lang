@@ -1,0 +1,10 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block title %}Final Score - Code Guessing Game{% endblock %}
+{% block content %}
+    <h1>Your Final Score</h1>
+    <p>You scored {{ score }} out of 100!</p>
+    <div style="text-align: center;">
+        <a href="{% url 'home' %}" class="option-button">Play Again</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block title %}Home - Code Guessing Game{% endblock %}
+{% block content %}
+    <h1>Welcome to the Code Guessing Game</h1>
+    <p>Press the button below to start.</p>
+    <div style="text-align: center;">
+        <a href="{% url 'game' %}" class="option-button">Start</a>
+    </div>
+{% endblock %}

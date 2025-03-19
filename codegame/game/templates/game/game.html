@@ -1,0 +1,77 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block title %}Game - Code Guessing Game{% endblock %}
+{% block extra_head %}
+<script>
+    // JavaScript countdown timer (10 seconds)
+    let timeLeft = 10;
+    function updateTimer() {
+        document.getElementById("timer").innerHTML = "Time left: " + timeLeft;
+        if (timeLeft <= 0) {
+            submitAndProceed();
+        }
+        timeLeft -= 1;
+    }
+    // Start the timer (update every second)
+    setInterval(updateTimer, 1000);
+
+    function submitAnswer() {
+        // Get the selected option from the radio inputs
+        const selectedOption = document.querySelector('input[name="choice"]:checked');
+        if (!selectedOption) {
+            alert("Please select an option.");
+            return;
+        }
+
+        // Use the internal correct answer passed from Django for highlighting
+        const correctLanguage = "{{ correct_language|escapejs }}";
+        const options = document.querySelectorAll('input[name="choice"]');
+        options.forEach(option => {
+            const label = document.querySelector(`label[for="${option.id}"]`);
+            if (option.value === correctLanguage) {
+                label.classList.add('correct');
+            } else {
+                label.classList.add('incorrect');
+            }
+        });
+
+        // Create a hidden input to store the selected value (ensures submission even if radio is disabled)
+        let hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'choice';
+        hiddenInput.value = selectedOption.value;
+        document.getElementById('answerForm').appendChild(hiddenInput);
+
+        // Disable further selection to prevent changes
+        options.forEach(option => option.disabled = true);
+
+        // Wait for 2 seconds to show the feedback, then submit the form
+        setTimeout(submitAndProceed, 2000);
+    }
+
+    function submitAndProceed() {
+        document.getElementById("answerForm").submit();
+    }
+</script>
+{% endblock %}
+{% block content %}
+    <h2>Guess the Programming Language</h2>
+    <p id="timer">Time left: 10</p>
+    <p>Score: {{ score }}</p>
+
+    <!-- Display the snippet image -->
+    <div style="text-align: center;">
+        <img src="{% static 'images/snippets/' %}{{ image_filename }}" alt="Code snippet">
+    </div>
+
+    <!-- Answer submission form with auto-submit on click (no submit button) -->
+    <form id="answerForm" method="POST" action="{% url 'game' %}">
+        {% csrf_token %}
+        {% for option in options %}
+            <div style="text-align: center; margin: 10px 0;">
+                <input type="radio" name="choice" value="{{ option.value }}" id="{{ option.value }}" onclick="submitAnswer()">
+                <label for="{{ option.value }}" class="option-button">{{ option.display }}</label>
+            </div>
+        {% endfor %}
+    </form>
+{% endblock %}

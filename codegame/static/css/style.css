@@ -1,0 +1,94 @@
+/* style.css */
+
+/* Reset basic elements */
+body, h1, h2, p, a, button, input, label {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #2c2c2c; /* Dark Gray */
+    color: #f0f0f0; /* Light text */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+p {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons and option styling */
+.option-button {
+    width: 150px;      /* Set a fixed width */
+    height: 50px;      /* Set a fixed height */
+    line-height: 50px; /* Vertically center text (if single line) */
+    text-align: center;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #444; /* Default background color */
+    color: #fff;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Hover effect for buttons */
+button:hover,
+.option-button:hover {
+    background-color: #666; /* Slightly lighter background on hover */
+    transform: scale(1.05); /* Scale up slightly for a subtle zoom effect */
+}
+
+.correct {
+    background-color: #4CAF50 !important; /* Green for correct */
+}
+
+.incorrect {
+    background-color: #f44336 !important; /* Red for incorrect */
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+    
+    h1, h2 {
+        font-size: 1.5em;
+    }
+    
+    .option-button, button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
