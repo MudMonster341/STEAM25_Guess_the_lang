@@ -1,0 +1,243 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block title %}Login{% endblock %}
+
+{% block extra_head %}
+<!-- Load the same "techy" Google Font (Orbitron) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+
+<style>
+  /* More aggressive reset to eliminate all spacing */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Hero section to fill the viewport */
+  .hero {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Matrix canvas behind everything */
+  #matrix-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+  }
+
+  /* Subtle overlay to help readability */
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 1;
+  }
+
+  /* Container box for login content */
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    animation: fadeIn 1.5s ease-in-out;
+    padding: 20px;
+    background-color: rgba(34, 34, 34, 0.8); /* Dark gray, semi‐transparent */
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px rgba(66, 135, 245, 0.7);
+  }
+
+  /* Success messages at the top */
+  .messages.success {
+    color: #32CD32; /* Green for "Already Played :)" */
+    margin-bottom: 1rem;
+  }
+
+  /* The login form */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  label {
+    font-size: 1rem;
+    text-align: left;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    font-size: 1rem;
+  }
+
+  button {
+    padding: 10px 22px;
+    border-radius: 6px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    background-color: #4287f5;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+  }
+
+  button:hover {
+    background-color: #3a76d2;
+  }
+
+  p {
+    margin-top: 1rem;
+    font-size: 1rem;
+    text-shadow: 0 0 8px rgba(66, 135, 245, 0.5);
+  }
+
+  /* Error messages below sign-up link */
+  .messages.error {
+    color: red;
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    h2 {
+      font-size: 1.6rem;
+    }
+    button {
+      font-size: 1rem;
+      padding: 8px 16px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <canvas id="matrix-canvas"></canvas>
+  <div class="hero-content">
+    <h2>Login</h2>
+
+    <!-- SUCCESS messages at the top (e.g. "Already Played :)") -->
+    {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == "success" %}
+          <div class="messages success">{{ message }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
+
+    <!-- ERROR messages below the sign-up link -->
+    {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == "error" %}
+          <div class="messages error">{{ message }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Matrix rain effect
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let fontSize = 14;
+    let columns;
+    let drops = [];
+    
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>{}[]()=+-*/\\|;:,.?!@#$%^&';
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = [];
+      for (let i = 0; i < columns; i++) {
+        drops[i] = Math.floor(Math.random() * canvas.height / fontSize) * -1;
+      }
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#4287f5';
+      ctx.font = fontSize + 'px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        drops[i]++;
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+      }
+    }
+    
+    function animate() {
+      draw();
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+  });
+</script>
+{% endblock %}
