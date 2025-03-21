@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from accounts.models import PlayerProfile
 
-
 def register(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -19,7 +18,7 @@ def register(request):
             validate_email(email)
         except ValidationError:
             messages.error(request, "Invalid email address.")
-            # Re‐render the form with the entered data
+            # Re-render the form with the entered data
             return render(request, 'accounts/signup.html', {'form': form})
 
         if form.is_valid():
@@ -30,9 +29,11 @@ def register(request):
             # Now save the user to DB (password is already handled by the form)
             user.save()
 
-            messages.success(request, "Registration successful. Please log in.")
-            # Redirect to the login page after successful registration
-            return redirect('login')
+            # Automatically log in the user
+            auth_login(request, user)
+            messages.success(request, "Registration successful. Welcome!")
+            # Redirect straight to the game after successful registration
+            return redirect('game')
     else:
         form = UserCreationForm()
 

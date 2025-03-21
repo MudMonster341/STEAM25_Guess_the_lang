@@ -197,7 +197,7 @@
     100% {
       background-position: 0% 90%, 20% 90%, 45% 70%, 60% 110%, 75% 80%, 95% 70%,
         110% 10%;
-      background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+      background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
     }
   }
 
@@ -226,9 +226,10 @@
     <img src="{% static 'images/Logo.png' %}" alt="Logo" class="logo">
     <h1>Guess the Language</h1>
     <p>Think you can guess each programming language just by looking at the code snippet?</p>
-    <!-- Use the new .button class for the bubble effect -->
-    <a href="{% url 'signup' %}">
-      <button>Start</button>
+    
+    <!-- Anchor with .button class for bubble animation -->
+    <a class="button" href="{% url 'signup' %}">
+      Start
     </a>
   </div>
 </div>
@@ -239,15 +240,13 @@
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
     
-    // Column settings
     let fontSize = 14;
     let columns;
     let drops = [];
     
-    // Characters to display (you can customize this)
+    // Characters to display
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>{}[]()=+-*/\\|;:,.?!@#$%^&';
-    
-    // Set canvas dimensions to match window size and recalculate columns and drops
+
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -257,16 +256,9 @@
         drops[i] = Math.floor(Math.random() * canvas.height / fontSize) * -1;
       }
     }
-    
-    // Call resize initially
     resizeCanvas();
-    
-    // Add event listener for window resize
-    window.addEventListener('resize', function() {
-      resizeCanvas();
-    });
-    
-    // Draw the characters
+    window.addEventListener('resize', resizeCanvas);
+
     function draw() {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -281,14 +273,11 @@
         }
       }
     }
-    
-    // Animation loop
+
     function animate() {
       draw();
       requestAnimationFrame(animate);
     }
-    
-    // Start animation
     animate();
   });
 </script>
